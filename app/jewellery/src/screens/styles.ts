@@ -19,6 +19,10 @@ export const STYLES = StyleSheet.create({
     padding: 10,
     fontSize: 18,
   },
+  image: {
+    width: 100,
+    height: 80,
+  },
 });
 
 export const COLORS = {

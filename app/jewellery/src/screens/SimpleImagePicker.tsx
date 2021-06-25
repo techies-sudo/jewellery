@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, Platform} from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, TouchableOpacity, Platform, Image} from 'react-native';
 import {STYLES, COLORS} from './styles';
 import {
   launchCamera,
@@ -10,8 +10,15 @@ import {
   ImageLibraryOptions,
 } from 'react-native-image-picker';
 
+import {dummyData} from '../data';
+
 export default function SimpleImagePicker() {
-  // const [imageSource, setImageSource] = useState(null);
+  const [predictionData, setPredictionData] = useState<{
+    name: string;
+    rate: number;
+    barcode: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
   const createFormData = (photo: Asset) => {
     const data = new FormData();
 
@@ -27,13 +34,18 @@ export default function SimpleImagePicker() {
   };
 
   const handleUpload = (photo: Asset) => {
-    console.log('formdata', createFormData(photo));
+    setLoading(true);
     fetch('http://192.168.43.158:8000/prediction/', {
       method: 'POST',
       body: createFormData(photo),
     })
       .then(response => response.json())
-      .then(response => console.log(response))
+      .then(response => {
+        const prediction = dummyData[response.prediction];
+        console.log(prediction, 'prediction');
+        setPredictionData(prediction);
+        setLoading(false);
+      })
       .catch(err => {
         console.error('error');
         console.log(err.response);
@@ -41,6 +53,7 @@ export default function SimpleImagePicker() {
   };
 
   const launchCameraHandler = () => {
+    setPredictionData(null);
     let options: CameraOptions = {
       mediaType: 'photo',
     };
@@ -55,7 +68,7 @@ export default function SimpleImagePicker() {
   };
 
   const selectImageHandler = () => {
-    console.log('clickerd');
+    setPredictionData(null);
     let options: ImageLibraryOptions = {
       mediaType: 'photo',
     };
@@ -75,8 +88,9 @@ export default function SimpleImagePicker() {
         STYLES.centerContainer,
         {backgroundColor: COLORS.primaryDark},
       ]}>
+      <Image source={require('../../assets/logo.png')} style={STYLES.image} />
       <Text style={[STYLES.title, {color: COLORS.primaryLight}]}>
-        Jewellery Predictor
+        Ornament Predictor
       </Text>
       <TouchableOpacity
         onPress={launchCameraHandler}
@@ -94,6 +108,16 @@ export default function SimpleImagePicker() {
         ]}>
         <Text style={STYLES.selectButtonTitle}>Pick an Image</Text>
       </TouchableOpacity>
+      <View>
+        {predictionData && (
+          <View style={[STYLES.selectButtonTitle, {backgroundColor: 'white'}]}>
+            <Text>Name: {predictionData.name}</Text>
+            <Text>Price: {predictionData.rate}</Text>
+            <Text>barcode: {predictionData.barcode}</Text>
+          </View>
+        )}
+        {loading && <Text style={[STYLES.selectButtonTitle, {backgroundColor: 'grey'}]}>Loading...</Text>}
+      </View>
     </View>
   );
 }
